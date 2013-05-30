@@ -916,7 +916,6 @@ static void wake_futex(struct futex_q *q)
 	 */
 	get_task_struct(p);
 
-	trace_printk("task %d wakes up (wake_futex)\n", q->task->pid);
 	task_wakes_on_condvar(q);
 	__unqueue_futex(q);
 	/*
@@ -1070,7 +1069,6 @@ futex_wake(u32 __user *uaddr, unsigned int flags, int nr_wake, u32 bitset)
 			if (!(this->bitset & bitset))
 				continue;
 
-			trace_printk("wake_futex from futex_wake\n");
 			wake_futex(this);
 			if (++ret >= nr_wake)
 				break;
@@ -1149,7 +1147,6 @@ retry_private:
 				ret = -EINVAL;
 				goto out_unlock;
 			}
-			trace_printk("wake_futex from futex_wake_op 1\n");
 			wake_futex(this);
 			if (++ret >= nr_wake)
 				break;
@@ -1166,7 +1163,6 @@ retry_private:
 					ret = -EINVAL;
 					goto out_unlock;
 				}
-				trace_printk("wake_futex from futex_wake_op 2\n");
 				wake_futex(this);
 				if (++op_ret >= nr_wake2)
 					break;
@@ -1335,8 +1331,6 @@ static int futex_requeue(u32 __user *uaddr1, unsigned int flags,
 	struct futex_q *this, *next;
 	u32 curval2;
 
-	trace_printk("requeuing from futex %p to %p\n", uaddr1, uaddr2);
-
 	if (requeue_pi) {
 		/*
 		 * requeue_pi requires a pi_state, try to allocate it now
@@ -1484,7 +1478,6 @@ retry_private:
 		 * woken by futex_unlock_pi().
 		 */
 		if (++task_count <= nr_wake && !requeue_pi) {
-			trace_printk("wake_futex from futex_requeue (!requeue_pi)\n");
 			wake_futex(this);
 			continue;
 		}
@@ -1970,9 +1963,6 @@ static void noinline task_blocks_on_condvar(struct futex_q *q,
 	h_head = &h_hb->chain;
 
 	if (plist_head_empty(h_head)) {
-		trace_printk("task %d blocks on cv (%lu, %d)"
-			     " with no helpers\n", q->task->pid,
-			     q->key.private.address, q->key.private.offset);
 		/*
 		 * No helpers for this condvar. Nothing to do.
 		 */
@@ -1980,12 +1970,6 @@ static void noinline task_blocks_on_condvar(struct futex_q *q,
 		spin_unlock(&h_hb->lock);
 		return;
 	}
-
-	trace_printk("task %d (prio %d) blocks on cv (%lu, %d)"
-		     " that has helpers\n", q->task->pid, q->task->prio,
-		     q->key.private.address, q->key.private.offset);
-	printk("task %d (prio %d) blocks on cv that has helpers\n", q->task->pid,
-		q->task->prio);
 
 	/*
 	 * Scan helpers list and check if they should be boosted;
@@ -2001,38 +1985,17 @@ static void noinline task_blocks_on_condvar(struct futex_q *q,
 			 */
 			old_top = NULL;
 			waiters_head = &this->task->cv_waiters;
-			if (!plist_head_empty(waiters_head)) {
-				//old_top = plist_first_entry(waiters_head,
-				//			    struct futex_q,
-				//			    pi_list);
-				old_top = task_top_cv_waiter(this->task);
-				printk("old_top addr %p\n", old_top);
-				printk("task %d, %d's cv_waiters list wasn't empty:"
-				       " old_top is %d\n", q->task->pid,
-				       this->task->pid, old_top->task->pid);
-			} else {
-				printk("task %d, is first waiter for %d\n",
-					q->task->pid, this->task->pid);
-			}
 
-			if (old_top != NULL && (old_top->task->prio >
-					q->task->prio)) {
-				printk("task %d, is gonna replace %d\n",
-					q->task->pid, old_top->task->pid);
+			if (!plist_head_empty(waiters_head))
+				old_top = task_top_cv_waiter(this->task);
+
+			if (old_top != NULL &&
+			    (old_top->task->prio > q->task->prio))
 				plist_del(&old_top->pi_list, waiters_head);
-			}
+
 			plist_node_init(&q->pi_list, waiter_prio);
-			trace_printk("task %d is a new top waiter for helper %d\n",
-				     q->task->pid, this->task->pid);
-			printk("task %d is a new top waiter for helper %d\n",
-				     q->task->pid, this->task->pid);
 			plist_add(&q->pi_list, waiters_head);
-			printk("new cv_waiters head is now %d, with addr %p\n",
-				task_top_cv_waiter(this->task)->task->pid,
-				task_top_cv_waiter(this->task));
-			
-			printk("this->prio %d waiter_prio %d\n",
-			       this->task->prio, waiter_prio);
+
 			if (this->task->prio > waiter_prio) {
 				/*
 				 * Helper task will be boosted.
@@ -2041,12 +2004,6 @@ static void noinline task_blocks_on_condvar(struct futex_q *q,
 				 * hash bucket lock, may deadlock in case of
 				 * an hash collision!!!
 				 */
-				trace_printk("task %d (prio %d) boosts helper %d (prio %d)\n",
-					q->task->pid, q->task->prio, this->task->pid,
-					this->task->prio);
-				printk("task %d (prio %d) boosts helper %d (prio %d)\n",
-					q->task->pid, q->task->prio, this->task->pid,
-					this->task->prio);
 				helper_adjust_prio(this->task, q);
 			} else
 				break;
@@ -2074,10 +2031,6 @@ static void task_wakes_on_condvar(struct futex_q *q)
 	struct plist_head *head;
 	int waiter_prio, chain_walk = 0;
 
-	trace_printk("task %d (prio %d) wakes on cv (%lu, %d)\n",
-		     q->task->pid, q->task->prio,
-		     q->key.private.address, q->key.private.offset);
-			
 	/**
 	 * Use q->key to find the futex_helpers hash bucket containing
 	 * q->task helpers list.
@@ -2098,17 +2051,11 @@ static void task_wakes_on_condvar(struct futex_q *q)
 	 */
 	plist_for_each_entry_safe(this, next, head, list) {
 		if (match_futex (&this->key, &q->key)) {
-			trace_printk("key matched\n");
 			/*
 			 * This helper is not boosted: nothing to do.
 			 */
-			if (this->task->prio == this->task->normal_prio) {
-				trace_printk("helper %d is not boosted..\n",
-					     this->task->pid);
-				printk("helper %d is not boosted..\n",
-					     this->task->pid);
+			if (this->task->prio == this->task->normal_prio)
 				continue;
-			}
 
 			/*
 			 * This helper is boosted holding an rt_mutex. We
@@ -2116,13 +2063,8 @@ static void task_wakes_on_condvar(struct futex_q *q)
 			 * from an rt_mutex waiter. rt_mutex code is
 			 * responsible for deboosting.
 			 */
-			if (!task_has_cv_waiters(this->task)) {
-				trace_printk("helper %d hasn't waiters..\n",
-					     this->task->pid);
-				printk("helper %d hasn't waiters..\n",
-					     this->task->pid);
+			if (!task_has_cv_waiters(this->task))
 				continue;
-			}
 
 			/*
 			 * This helper could be boosted by this cond waiter.
@@ -2134,13 +2076,8 @@ static void task_wakes_on_condvar(struct futex_q *q)
 				chain_walk = 1;
 
 			plist_del(&q->pi_list, &this->task->cv_waiters);
-			if (chain_walk) {
-				trace_printk("helper %d is going to be deboosted\n",
-					     this->task->pid);
-				printk("helper %d is going to be deboosted\n",
-					     this->task->pid);
+			if (chain_walk)
 				helper_adjust_prio(this->task, q);
-			}
 		}
 	}
 
@@ -2926,15 +2863,9 @@ static int futex_helper_manage(u32 __user *uaddr, unsigned int flags,
 	helper->key = key;
 
 	if (add) {
-		trace_printk("task %d is helper for cv %p "
-			     "(%lu, %d)\n", pid, uaddr, key.private.address,
-			     key.private.offset);
 		ret = futex_helper_add(hb, helper, pid);
 	}
 	else {
-		trace_printk("task %d removed as helper for cv %p "
-			     "(%lu, %d)\n", pid, uaddr, key.private.address,
-			     key.private.offset);
 		ret = futex_helper_delete(head, &key, pid);
 		spin_unlock(&hb->lock);
 	}
