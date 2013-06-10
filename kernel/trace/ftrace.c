@@ -473,16 +473,6 @@ static void ftrace_update_pid_func(void)
 }
 
 #ifdef CONFIG_FUNCTION_PROFILER
-struct ftrace_profile {
-	struct hlist_node		node;
-	unsigned long			ip;
-	unsigned long			counter;
-#ifdef CONFIG_FUNCTION_GRAPH_TRACER
-	unsigned long long		time;
-	unsigned long long		time_squared;
-#endif
-};
-
 struct ftrace_profile_page {
 	struct ftrace_profile_page	*next;
 	unsigned long			index;
@@ -592,7 +582,7 @@ static int function_stat_headers(struct seq_file *m)
 	return 0;
 }
 
-static void function_stat_calc(struct ftrace_profile *rec,
+void function_stat_calc(struct ftrace_profile *rec,
 			       unsigned long long *avg,
 			       unsigned long long *stddev)
 {

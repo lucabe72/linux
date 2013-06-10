@@ -4,6 +4,7 @@
 #include <linux/kthread.h>
 #include <linux/delay.h>
 #include <linux/slab.h>
+#include <linux/random.h>
 
 static inline int trace_valid_entry(struct trace_entry *entry)
 {
@@ -724,6 +725,74 @@ static int trace_graph_entry_watchdog(struct ftrace_graph_ent *trace)
 }
 
 /*
+ * Test the trace basic running statistic calculations to see if they
+ * agree with static one.
+ */
+#define	TIME_ENTRIES	50
+#define	MAX_DURATION	1000000 /* ns */
+
+static int trace_test_stat(void)
+{
+	unsigned long long time_array[TIME_ENTRIES];
+	unsigned long long averages[TIME_ENTRIES], stddevs[TIME_ENTRIES];
+	int i, j, count;
+	unsigned long long avg, stddev;
+	struct ftrace_profile rec;
+
+	/*
+	 * Fill-up time_array, each element corresponds to the time spent
+	 * executing some function.
+	 */
+	for (i = 0; i < TIME_ENTRIES; i++) {
+		get_random_bytes(&time_array[i], sizeof(unsigned long long));
+		time_array[i] %= MAX_DURATION;
+		averages[i] = stddevs[i] = 0;
+	}
+
+	/*
+	 * Calculate stats in the static way.
+	 */
+	for (i = 0; i < TIME_ENTRIES; i++) {
+		if (i == 0) {
+			averages[i] = time_array[i];
+			stddevs[i] = 0;
+			continue;
+		}
+
+		count = 0;
+		for (j = 0; j < i + 1; j++) {
+			count++;
+			averages[i] += time_array[j];
+		}
+		do_div(averages[i], count);
+
+		for (j = 0; j < count; j++)
+			stddevs[i] += (time_array[j] - averages[i]) *
+				      (time_array[j] - averages[i]);
+		/* Reflect ns^2 -> us^2 conversion. */
+		do_div(stddevs[i], (count - 1) * 1000);
+	}
+
+	/*
+	 * Now do the same using running stats and compare results.
+	 */
+	rec.time = rec.time_squared = 0;
+
+	for (i = 0; i < TIME_ENTRIES; i++) {
+		avg = stddev = 0;
+		rec.counter = i + 1;
+		rec.time += time_array[i];
+		rec.time_squared += time_array[i] * time_array[i];
+		function_stat_calc(&rec, &avg, &stddev);
+
+		if (avg != averages[i] || stddev != stddevs[i])
+			return 1;
+	}
+
+	return 0;
+}
+
+/*
  * Pretty much the same than for the function tracer from which the selftest
  * has been borrowed.
  */
@@ -773,6 +842,9 @@ trace_selftest_startup_function_graph(struct tracer *trace,
 	}
 
 	/* Don't test dynamic tracing, the function tracer already did */
+
+	/* Check basic statistics */
+	ret = trace_test_stat();
 
 out:
 	/* Stop it if we failed */

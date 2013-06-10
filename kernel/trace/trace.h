@@ -1062,4 +1062,20 @@ int perf_ftrace_event_register(struct ftrace_event_call *call,
 #define perf_ftrace_event_register NULL
 #endif
 
+#ifdef CONFIG_FUNCTION_PROFILER
+struct ftrace_profile {
+	struct hlist_node		node;
+	unsigned long			ip;
+	unsigned long			counter;
+#ifdef CONFIG_FUNCTION_GRAPH_TRACER
+	unsigned long long		time;
+	unsigned long long		time_squared;
+#endif
+};
+
+void function_stat_calc(struct ftrace_profile *rec,
+			       unsigned long long *avg,
+			       unsigned long long *stddev);
+#endif
+
 #endif /* _LINUX_KERNEL_TRACE_H */
