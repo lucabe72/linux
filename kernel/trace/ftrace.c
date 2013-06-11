@@ -592,6 +592,27 @@ static int function_stat_headers(struct seq_file *m)
 	return 0;
 }
 
+static void function_stat_calc(struct ftrace_profile *rec,
+			       unsigned long long *avg,
+			       unsigned long long *stddev)
+{
+	*avg = rec->time;
+	do_div(*avg, rec->counter);
+
+	/* Sample standard deviation (s^2) */
+	if (rec->counter <= 1)
+		*stddev = 0;
+	else {
+		*stddev = rec->time_squared - rec->counter * (*avg) * (*avg);
+
+		/*
+		 * Divide only 1000 for ns^2 -> us^2 conversion.
+		 * trace_print_graph_duration will divide 1000 again.
+		 */
+		do_div(*stddev, (rec->counter - 1) * 1000);
+	}
+}
+
 static int function_stat_show(struct seq_file *m, void *v)
 {
 	struct ftrace_profile *rec = v;
@@ -615,20 +636,7 @@ static int function_stat_show(struct seq_file *m, void *v)
 
 #ifdef CONFIG_FUNCTION_GRAPH_TRACER
 	seq_printf(m, "    ");
-	avg = rec->time;
-	do_div(avg, rec->counter);
-
-	/* Sample standard deviation (s^2) */
-	if (rec->counter <= 1)
-		stddev = 0;
-	else {
-		stddev = rec->time_squared - rec->counter * avg * avg;
-		/*
-		 * Divide only 1000 for ns^2 -> us^2 conversion.
-		 * trace_print_graph_duration will divide 1000 again.
-		 */
-		do_div(stddev, (rec->counter - 1) * 1000);
-	}
+	function_stat_calc(rec, &avg, &stddev);
 
 	trace_seq_init(&s);
 	trace_print_graph_duration(rec->time, &s);
