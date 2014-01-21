@@ -7,14 +7,14 @@ CONTENTS
  0. WARNING
  1. Overview
  2. Task scheduling
- 2. The Interface
- 3. Bandwidth management
-   3.1 System-wide settings
-   3.2 Task interface
-   3.4 Default behavior
- 4. Tasks CPU affinity
-   4.1 SCHED_DEADLINE and cpusets HOWTO
- 5. Future plans
+ 3. Scheduling Real-Time Tasks
+ 4. Bandwidth management
+   4.1 System-wide settings
+   4.2 Task interface
+   4.3 Default behavior
+ 5. Tasks CPU affinity
+   5.1 SCHED_DEADLINE and cpusets HOWTO
+ 6. Future plans
 
 
 0. WARNING
@@ -66,7 +66,11 @@ CONTENTS
   3 - L. Abeni. Server Mechanisms for Multimedia Applications. ReTiS Lab
       Technical Report. http://xoomer.virgilio.it/lucabe72/pubs/tr-98-01.ps
 
-3. Bandwidth management
+3. Scheduling Real-Time Tasks
+=============================
+
+
+4. Bandwidth management
 =======================
 
  In order for the -deadline scheduling to be effective and useful, it is
@@ -93,7 +97,7 @@ CONTENTS
  and thus we don't need an higher level throttling mechanism to enforce the
  desired bandwidth.
 
-3.1 System wide settings
+4.1 System wide settings
 ------------------------
 
  The system wide settings are configured under the /proc virtual file system.
@@ -115,7 +119,7 @@ CONTENTS
  This is done by writing -1 in /proc/sys/kernel/sched_rt_runtime_us.
 
 
-3.2 Task interface
+4.2 Task interface
 ------------------
 
  Specifying a periodic/sporadic task that executes for a given amount of
@@ -132,7 +136,7 @@ CONTENTS
     sched_setattr() and sched_getattr() are implemented.
 
 
-3.3 Default behavior
+4.3 Default behavior
 ---------------------
 
  The default value for SCHED_DEADLINE bandwidth is to have rt_runtime equal to
@@ -142,14 +146,14 @@ CONTENTS
 
  A -deadline task cannot fork.
 
-4. Tasks CPU affinity
+5. Tasks CPU affinity
 =====================
 
  -deadline tasks cannot have an affinity mask smaller that the entire
  root_domain they are created on. However, affinities can be specified
  through the cpuset facility (Documentation/cgroups/cpusets.txt).
 
-4.1 SCHED_DEADLINE and cpusets HOWTO
+5.1 SCHED_DEADLINE and cpusets HOWTO
 ------------------------------------
 
  An example of a simple configuration (pin a -deadline task to CPU0)
@@ -169,7 +173,7 @@ CONTENTS
  rt-app -t 100000:10000:d:0 -D5 (it is now actually superfluous to specify
  task affinity)
 
-5. Future plans
+6. Future plans
 ===============
 
  Still missing:
