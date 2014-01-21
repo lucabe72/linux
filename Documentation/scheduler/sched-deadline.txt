@@ -37,24 +37,65 @@ CONTENTS
 2. Task scheduling
 ==================
 
- The typical -deadline task is composed of a computation phase (instance)
- which is activated on a periodic or sporadic fashion. The expected (maximum)
- duration of such computation is called the task's runtime; the time interval
- by which each instance needs to be completed is called the task's relative
- deadline. The task's absolute deadline is dynamically calculated as the
- time instant a task (or, more properly) activates plus the relative
- deadline.
+ SCHED_DEADLINE uses three parameters, named "runtime", "period", and
+ "deadline" to schedule tasks. A SCHED_DEADLINE task is guaranteed to receive
+ "runtime" microseconds of execution time every "period" microseconds, and
+ these "runtime" microseconds are available within "deadline" microseconds
+ from the beginning of the period.  In order to implement this behaviour,
+ every time the task wakes up, the scheduler computes a "scheduling deadline"
+ consistent with the guarantee (using the CBS[2,3] algorithm). Tasks are then
+ scheduled using EDF[1] on these scheduling deadlines (the task with the
+ smallest scheduling deadline is selected for execution).
+ 
+ Summing up, the CBS[2,3] algorithms assigns scheduling deadlines to tasks so
+ that each task runs for at most its runtime every period, avoiding any
+ interference between different tasks (bandwidth isolation), while the EDF[1]
+ algorithm selects the task with the smallest scheduling deadline as the one
+ to be executed first.  Thanks to this feature, also tasks that do not
+ strictly comply with the "traditional" real-time task model (see Section 3)
+ can effectively use the new policy.
 
- The EDF[1] algorithm selects the task with the smallest absolute deadline as
- the one to be executed first, while the CBS[2,3] ensures that each task runs
- for at most its runtime every period, avoiding any interference between
- different tasks (bandwidth isolation).
- Thanks to this feature, also tasks that do not strictly comply with the
- computational model described above can effectively use the new policy.
- IOW, there are no limitations on what kind of task can exploit this new
+3. Scheduling Real-Time Tasks
+=============================
+
+ * BIG FAT WARNING ******************************************************
+ *
+ * This section contains a (not-thorough) summary on classical deadline
+ * scheduling theory, and how it applies to SCHED_DEADLINE.
+ * The reader can "safely" skip to Section 4 if only interested in seeing
+ * how the scheduling policy can be used. Anyway, we strongly recommend
+ * to come back here and continue reading (once the urge for testing is
+ * satisfied :P) to be sure of fully understanding all technical details.
+ ************************************************************************
+
+ There are no limitations on what kind of task can exploit this new
  scheduling discipline, even if it must be said that it is particularly
  suited for periodic or sporadic tasks that need guarantees on their
  timing behavior, e.g., multimedia, streaming, control applications, etc.
+
+ A typical real-time task is composed of a computation phase (task instance,
+ or job) which is activated on a periodic or sporadic fashion.
+ Each job J_j (where J_j is the j^th job of the task) is characterised by an
+ arrival time r_j (the time when the job starts), an amount of computation
+ time c_j needed to finish the job, and a job absolute deadline d_j, which
+ is the time within which the job should be finished. The maximum execution
+ time max_j{c_j} is called "Worst Case Execution Time" (WCET) for the task.
+ A real-time task can be periodic with period P if r_{j+1} = r_j + P, or
+ sporadic with minimum inter-arrival time P is r_{j+1} >= r_j + P. Finally,
+ d_j = r_j + D, where D is the task's relative deadline.
+ 
+ SCHED_DEADLINE can be used to schedule real-time tasks guaranteeing that
+ the jobs' deadlines of a task are respected. In order to do this, a task
+ must be scheduled by setting:
+ 
+  - runtime >= WCET
+  - deadline = D
+  - period <= P
+
+ IOW, if runtime >= WCET and if period is >= P, then the scheduling deadlines
+ and the absolute deadlines (d_j) coincide, so the task is guaranteed to
+ respect the jobs' absolute deadlines (this is what is called "hard
+ schedulability property" in the CBS paper[2]).
 
  References:
   1 - C. L. Liu and J. W. Layland. Scheduling algorithms for multiprogram-
@@ -65,10 +106,6 @@ CONTENTS
       Symposium, 1998. http://retis.sssup.it/~giorgio/paps/1998/rtss98-cbs.pdf
   3 - L. Abeni. Server Mechanisms for Multimedia Applications. ReTiS Lab
       Technical Report. http://xoomer.virgilio.it/lucabe72/pubs/tr-98-01.ps
-
-3. Scheduling Real-Time Tasks
-=============================
-
 
 4. Bandwidth management
 =======================
