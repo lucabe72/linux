@@ -104,11 +104,12 @@ CONTENTS
 
  There are no limitations on what kind of task can exploit this new
  scheduling discipline, even if it must be said that it is particularly
- suited for periodic or sporadic tasks that need guarantees on their
+ suited for periodic or sporadic real-time tasks that need guarantees on their
  timing behavior, e.g., multimedia, streaming, control applications, etc.
 
- A typical real-time task is composed of a computation phase (task instance,
- or job) which is activated on a periodic or sporadic fashion.
+ A typical real-time task is composed of a repetition of computation phases
+ (task instances, or jobs) which are activated on a periodic or sporadic
+ fashion.
  Each job J_j (where J_j is the j^th job of the task) is characterised by an
  arrival time r_j (the time when the job starts), an amount of computation
  time c_j needed to finish the job, and a job absolute deadline d_j, which
@@ -127,9 +128,9 @@ CONTENTS
   - period <= P
 
  IOW, if runtime >= WCET and if period is >= P, then the scheduling deadlines
- and the absolute deadlines (d_j) coincide, so the task is guaranteed to
- respect the jobs' absolute deadlines (this is what is called "hard
- schedulability property" in the CBS paper[2]).
+ and the absolute deadlines (d_j) coincide, so a proper admission control
+ allows to respect the jobs' absolute deadlines for this task (this is what is
+ called "hard schedulability property" and is an extension of Lemma 1 of [2]).
 
  References:
   1 - C. L. Liu and J. W. Layland. Scheduling algorithms for multiprogram-
