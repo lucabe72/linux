@@ -87,7 +87,7 @@ CONTENTS
   - When the current time is equal to the scheduling deadline of a
     throttled task, the scheduling deadline and the current runtime are
     updated as
-         scheduling deadline = scheduling deadline + deadline
+         scheduling deadline = scheduling deadline + period
          current runtime = current runtime + runtime
 
 
