@@ -83,8 +83,10 @@ CONTENTS
     task is descheduled / preempted)
   - When the current runtime becomes less or equal than 0, the task is
     said to be "throttled" (also known as "depleted" in real-time literature)
-    and cannot be scheduled until its scheduling deadline
-  - When the current time is equal to the scheduling deadline of a
+    and cannot be scheduled until its scheduling deadline. The "replenishment
+    time" for this task (see next item) is set to be equal to the current
+    value of the scheduling deadline
+  - When the current time is equal to the replenishment time of a
     throttled task, the scheduling deadline and the current runtime are
     updated as
          scheduling deadline = scheduling deadline + period
