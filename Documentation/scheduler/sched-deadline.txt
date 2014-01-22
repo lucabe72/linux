@@ -45,7 +45,9 @@ CONTENTS
  every time the task wakes up, the scheduler computes a "scheduling deadline"
  consistent with the guarantee (using the CBS[2,3] algorithm). Tasks are then
  scheduled using EDF[1] on these scheduling deadlines (the task with the
- smallest scheduling deadline is selected for execution).
+ smallest scheduling deadline is selected for execution). Notice that this
+ guaranteed is respected if a proper "admission control" strategy (see Section
+ "4. Bandwidth management") is used.
  
  Summing up, the CBS[2,3] algorithms assigns scheduling deadlines to tasks so
  that each task runs for at most its runtime every period, avoiding any
