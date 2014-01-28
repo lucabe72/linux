@@ -66,9 +66,9 @@ CONTENTS
     a "remaining runtime". These two parameters are initially set to 0
   - When a SCHED_DEADLINE task wakes up (becomes ready for execution),
     the scheduler checks if
-                  remaining runtime                runtime
-         ---------------------------------- > ----------------
-         scheduling deadline - current time         period
+               remaining runtime                     runtime
+       ----------------------------------    >    ----------------
+       scheduling deadline - current time             period
     if the scheduling deadline is smaller than the current time, or
     this condition is verified, then the scheduling deadline and the
     remaining runtime are re-initialised as
