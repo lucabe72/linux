@@ -146,7 +146,7 @@ CONTENTS
       Real-Time Systems. Proceedings of the 19th IEEE Real-time Systems
       Symposium, 1998. http://retis.sssup.it/~giorgio/paps/1998/rtss98-cbs.pdf
   3 - L. Abeni. Server Mechanisms for Multimedia Applications. ReTiS Lab
-      Technical Report. http://xoomer.virgilio.it/lucabe72/pubs/tr-98-01.ps
+      Technical Report. http://disi.unitn.it/~abeni/tr-98-01.pdf 
 
 4. Bandwidth management
 =======================
