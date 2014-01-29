@@ -64,45 +64,45 @@ CONTENTS
     "deadline", and "period" parameters;
 
   - The state of the task is described by a "scheduling deadline", and
-    a "current runtime". These two parameters are initially set to 0;
+    a "remaining runtime". These two parameters are initially set to 0;
 
   - When a SCHED_DEADLINE task wakes up (becomes ready for execution),
     the scheduler checks if
 
-                    current runtime                runtime
+                  remaining runtime                runtime
          ---------------------------------- > ----------------
          scheduling deadline - current time         period
 
     then, if the scheduling deadline is smaller than the current time, or
     this condition is verified, the scheduling deadline and the
-    current budget are re-initialised as
+    remaining runtime are re-initialised as
 
          scheduling deadline = current time + deadline
-         current runtime = runtime
+         remaining runtime = runtime
 
-    otherwise, the scheduling deadline and the current runtime are
+    otherwise, the scheduling deadline and the remaining runtime are
     left unchanged;
 
   - When a SCHED_DEADLINE task executes for an amount of time t, its
-    current runtime is decreased as
+    remaining runtime is decreased as
 
-         current runtime = current runtime - t
+         remaining runtime = remaining runtime - t
 
     (technically, the runtime is decreased at every tick, or when the
     task is descheduled / preempted);
 
-  - When the current runtime becomes less or equal than 0, the task is
+  - When the remaining runtime becomes less or equal than 0, the task is
     said to be "throttled" (also known as "depleted" in real-time literature)
     and cannot be scheduled until its scheduling deadline. The "replenishment
     time" for this task (see next item) is set to be equal to the current
     value of the scheduling deadline;
 
   - When the current time is equal to the replenishment time of a
-    throttled task, the scheduling deadline and the current runtime are
+    throttled task, the scheduling deadline and the remaining runtime are
     updated as
 
          scheduling deadline = scheduling deadline + period
-         current runtime = current runtime + runtime
+         remaining runtime = remaining runtime + runtime
 
 
 3. Scheduling Real-Time Tasks
