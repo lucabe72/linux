@@ -147,6 +147,8 @@ CONTENTS
  and the absolute deadlines (d_j) coincide, so a proper admission control
  allows to respect the jobs' absolute deadlines for this task (this is what is
  called "hard schedulability property" and is an extension of Lemma 1 of [2]).
+ Notice that if runtime > deadine the admission control will surely reject
+ this task, as it is not possible to respect its temporal constraints.
 
  References:
   1 - C. L. Liu and J. W. Layland. Scheduling algorithms for multiprogram-
