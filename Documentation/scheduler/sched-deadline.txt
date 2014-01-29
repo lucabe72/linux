@@ -69,9 +69,9 @@ CONTENTS
   - When a SCHED_DEADLINE task wakes up (becomes ready for execution),
     the scheduler checks if
 
-                  remaining runtime                runtime
-         ---------------------------------- > ----------------
-         scheduling deadline - current time         period
+                 remaining runtime                  runtime
+        ----------------------------------    >    ---------
+        scheduling deadline - current time           period
 
     then, if the scheduling deadline is smaller than the current time, or
     this condition is verified, the scheduling deadline and the
