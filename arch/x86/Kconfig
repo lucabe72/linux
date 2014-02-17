@@ -443,6 +443,7 @@ config X86_INTEL_MID
 	bool "Intel MID platform support"
 	depends on X86_32
 	depends on X86_EXTENDED_PLATFORM
+	depends on X86_PLATFORM_DEVICES
 	depends on PCI
 	depends on PCI_GOANY
 	depends on X86_IO_APIC
@@ -584,6 +585,38 @@ config SCHED_OMIT_FRAME_POINTER
 	  at the expense of slightly more scheduling overhead.
 
 	  If in doubt, say "Y".
+
+config KVMTOOL_TEST_ENABLE
+	bool "Enable options to create a bootable tools/kvm/ kernel"
+	select NET
+	select NETDEVICES
+	select PCI
+	select BLOCK
+	select BLK_DEV
+	select NETWORK_FILESYSTEMS
+	select INET
+	select EXPERIMENTAL
+	select TTY
+	select SERIAL_8250
+	select SERIAL_8250_CONSOLE
+	select IP_PNP
+	select IP_PNP_DHCP
+	select BINFMT_ELF
+	select PCI_MSI
+	select HAVE_ARCH_KGDB
+	select DEBUG_KERNEL
+	select KGDB
+	select KGDB_SERIAL_CONSOLE
+	select VIRTUALIZATION
+	select VIRTIO
+	select VIRTIO_RING
+	select VIRTIO_PCI
+	select VIRTIO_BLK
+	select VIRTIO_CONSOLE
+	select VIRTIO_NET
+	select 9P_FS
+	select NET_9P
+	select NET_9P_VIRTIO
 
 menuconfig HYPERVISOR_GUEST
 	bool "Linux guest support"
@@ -1049,9 +1082,9 @@ config MICROCODE_INTEL
 	  This options enables microcode patch loading support for Intel
 	  processors.
 
-	  For latest news and information on obtaining all the required
-	  Intel ingredients for this driver, check:
-	  <http://www.urbanmyth.org/microcode/>.
+	  For the current Intel microcode data package go to
+	  <https://downloadcenter.intel.com> and search for
+	  'Linux Processor Microcode Data File'.
 
 config MICROCODE_AMD
 	bool "AMD microcode loading support"
