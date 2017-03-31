@@ -135,15 +135,6 @@ struct rt_prio_array {
 	struct list_head queue[MAX_RT_PRIO];
 };
 
-struct rt_bandwidth {
-	/* nests inside the rq lock: */
-	raw_spinlock_t		rt_runtime_lock;
-	ktime_t			rt_period;
-	u64			rt_runtime;
-	struct hrtimer		rt_period_timer;
-	unsigned int		rt_period_active;
-};
-
 void __dl_clear_params(struct task_struct *p);
 
 /*
@@ -256,7 +247,6 @@ struct task_group {
 	struct sched_rt_entity **rt_se;
 	struct rt_rq **rt_rq;
 
-	struct rt_bandwidth rt_bandwidth;
 #endif
 
 	struct rcu_head rcu;
@@ -427,11 +417,6 @@ struct cfs_rq {
 #endif /* CONFIG_FAIR_GROUP_SCHED */
 };
 
-static inline int rt_bandwidth_enabled(void)
-{
-	return sysctl_sched_rt_runtime >= 0;
-}
-
 /* RT IPI pull logic requires IRQ_WORK */
 #ifdef CONFIG_IRQ_WORK
 # define HAVE_RT_PUSH_IPI
@@ -462,12 +447,6 @@ struct rt_rq {
 #endif
 #endif /* CONFIG_SMP */
 	int rt_queued;
-
-	int rt_throttled;
-	u64 rt_time;
-	u64 rt_runtime;
-	/* Nests inside the rq lock: */
-	raw_spinlock_t rt_runtime_lock;
 
 #ifdef CONFIG_RT_GROUP_SCHED
 	unsigned long rt_nr_boosted;
@@ -1397,9 +1376,6 @@ extern void init_sched_fair_class(void);
 
 extern void resched_curr(struct rq *rq);
 extern void resched_cpu(int cpu);
-
-extern struct rt_bandwidth def_rt_bandwidth;
-extern void init_rt_bandwidth(struct rt_bandwidth *rt_b, u64 period, u64 runtime);
 
 extern struct dl_bandwidth def_dl_bandwidth;
 extern void init_dl_bandwidth(struct dl_bandwidth *dl_b, u64 period, u64 runtime);

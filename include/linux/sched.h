@@ -1365,8 +1365,6 @@ struct sched_rt_entity {
 	struct sched_rt_entity	*parent;
 	/* rq on which this entity is (to be) queued: */
 	struct rt_rq		*rt_rq;
-	/* rq "owned" by this entity/group: */
-	struct rt_rq		*my_q;
 #endif
 };
 
