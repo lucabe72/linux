@@ -6088,9 +6088,33 @@ static void migrate_task_rq_fair(struct task_struct *p)
 	p->se.exec_start = 0;
 }
 
+#ifdef CONFIG_RT_GROUP_SCHED
+static inline struct rq *rq_of_rt_rq(struct rt_rq *rt_rq)
+{
+	return rt_rq->rq;
+}
+#else
+static inline struct rq *rq_of_rt_rq(struct rt_rq *rt_rq)
+{
+	return container_of(rt_rq, struct rq, rt);
+}
+#endif /* CONFIG_RT_GROUP_SCHED */
+
 static void task_dead_fair(struct task_struct *p)
 {
 	remove_entity_load_avg(&p->se);
+
+	/*
+	 * p got killed while hanging out in RT.
+	 * Remove it from throttled_task list.
+	 */
+	if (rt_throttled(p)) {
+		struct sched_rt_entity *rt_se = &p->rt;
+		struct rt_rq *rt_rq = rt_rq_of_se(rt_se);
+
+		lockdep_assert_held(&rq_of_rt_rq(rt_rq)->lock);
+		list_del_init(&rt_se->cfs_throttled_task);
+	}
 }
 #else
 #define task_fits_max(p, cpu) true
@@ -9296,6 +9320,14 @@ static void switched_from_fair(struct rq *rq, struct task_struct *p)
 
 static void switched_to_fair(struct rq *rq, struct task_struct *p)
 {
+	if (!rt_prio(p->normal_prio) && rt_throttled(p)) {
+		struct sched_rt_entity *rt_se = &p->rt;
+		struct rt_rq *rt_rq = rt_rq_of_se(rt_se);
+
+		lockdep_assert_held(&rq_of_rt_rq(rt_rq)->lock);
+		list_del_init(&rt_se->cfs_throttled_task);
+	}
+
 	attach_task_cfs_rq(p);
 
 	if (task_on_rq_queued(p)) {

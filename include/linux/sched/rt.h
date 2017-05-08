@@ -15,6 +15,11 @@ static inline int rt_task(struct task_struct *p)
 	return rt_prio(p->prio);
 }
 
+static inline int rt_throttled(struct task_struct *p)
+{
+	return !list_empty(&p->rt.cfs_throttled_task);
+}
+
 #ifdef CONFIG_RT_MUTEXES
 extern int rt_mutex_getprio(struct task_struct *p);
 extern void rt_mutex_setprio(struct task_struct *p, int prio);

@@ -621,15 +621,18 @@ static enum hrtimer_restart dl_task_timer(struct hrtimer *timer)
 		sched_clock_tick();
 		update_rq_clock(rq);
 
+		cfs_unthrottle_rt_tasks(rt_rq);
 		dl_se->dl_throttled = 0;
 		if (rt_rq->rt_nr_running) {
 			enqueue_dl_entity(dl_se, dl_se, ENQUEUE_REPLENISH);
 
 			resched_curr(rq);
+/*
 #ifdef CONFIG_SMP
 			if (has_pushable_dl_tasks(rq))
 				push_dl_task(rq);
 #endif
+*/
 		} else {
 			replenish_dl_entity(dl_se, dl_se);
 		}

@@ -785,6 +785,10 @@ static inline void rq_clock_skip_update(struct rq *rq, bool skip)
 		rq->clock_skip_update &= ~RQCF_REQ_SKIP;
 }
 
+void __setprio_other(struct rq *rq, struct task_struct *p);
+void __setprio_fifo(struct rq *rq, struct task_struct *p);
+void cfs_unthrottle_rt_tasks(struct rt_rq *rt_rq);
+
 #ifdef CONFIG_NUMA
 enum numa_topology_type {
 	NUMA_DIRECT,

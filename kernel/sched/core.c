@@ -1094,7 +1094,7 @@ static inline void check_class_changed(struct rq *rq, struct task_struct *p,
 				       const struct sched_class *prev_class,
 				       int oldprio)
 {
-	if (prev_class != p->sched_class) {
+	if (prev_class != p->sched_class || rt_throttled(p)) {
 		if (prev_class->switched_from)
 			prev_class->switched_from(rq, p);
 
@@ -3631,6 +3631,94 @@ int default_wake_function(wait_queue_t *curr, unsigned mode, int wake_flags,
 	return try_to_wake_up(curr->private, mode, wake_flags);
 }
 EXPORT_SYMBOL(default_wake_function);
+
+void __setprio_other(struct rq *rq, struct task_struct *p)
+{
+	int oldprio, queued, running;
+	const struct sched_class *prev_class;
+
+	lockdep_assert_held(&rq->lock);
+
+	oldprio = p->prio;
+	prev_class = p->sched_class;
+	queued = task_on_rq_queued(p);
+	running = task_current(rq, p);
+	BUG_ON(!rt_throttled(p));
+
+	if (queued)
+		dequeue_task(rq, p, DEQUEUE_SAVE | DEQUEUE_MOVE);
+/*
+	if (running)
+		put_prev_task(rq, p);
+*/
+	p->sched_class = &fair_sched_class;
+	p->prio = DEFAULT_PRIO;
+
+	/*
+	 * As in attach_task_cfs_rq, since the real-depth could have been
+	 * changed (only FAIR class maintain depth value), reset depth
+	 * properly.
+	 */
+	p->se.depth = p->se.parent ? p->se.parent->depth + 1 : 0;
+
+	if (running)
+		p->sched_class->set_curr_task(rq);
+	if (queued)
+		enqueue_task(rq, p, ENQUEUE_RESTORE | ENQUEUE_MOVE);
+
+	check_class_changed(rq, p, prev_class, oldprio);
+}
+
+void __setprio_fifo(struct rq *rq, struct task_struct *p)
+{
+	int oldprio, queued, running, cpu;
+	const struct sched_class *prev_class;
+	unsigned int count = 0;
+
+	lockdep_assert_held(&rq->lock);
+
+	/*
+	 * p might have migrated while hanging out in OTHER. We will need its
+	 * current rq lock for dequeue_task/put_prev_task.
+	 */
+again:
+	cpu = task_cpu(p);
+	if (cpu != cpu_of(rq)) {
+		double_lock_balance(rq, cpu_rq(cpu));
+		if (cpu != task_cpu(p)) {
+			double_unlock_balance(rq, cpu_rq(cpu));
+			count++;
+			BUG_ON(count > 10);
+			goto again;
+		}
+	}
+
+	BUG_ON(p->sched_class == &rt_sched_class);
+
+	oldprio = p->prio;
+	prev_class = p->sched_class;
+	queued = task_on_rq_queued(p);
+	running = task_current(cpu_rq(cpu), p);
+	BUG_ON(rt_throttled(p));
+
+	if (queued)
+		dequeue_task(cpu_rq(cpu), p, DEQUEUE_SAVE | DEQUEUE_MOVE);
+	if (running)
+		put_prev_task(cpu_rq(cpu), p);
+
+	p->sched_class = &rt_sched_class;
+	p->prio = (MAX_RT_PRIO - 1) - p->rt_priority;
+
+	if (running)
+		p->sched_class->set_curr_task(cpu_rq(cpu));
+	if (queued)
+		enqueue_task(cpu_rq(cpu), p, ENQUEUE_REPLENISH | ENQUEUE_MOVE | ENQUEUE_RESTORE);
+
+	check_class_changed(cpu_rq(cpu), p, prev_class, oldprio);
+out:
+	if (cpu != cpu_of(rq))
+		double_unlock_balance(rq, cpu_rq(cpu));
+}
 
 #ifdef CONFIG_RT_MUTEXES
 
