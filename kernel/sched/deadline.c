@@ -1199,6 +1199,7 @@ pick_next_task_dl(struct rq *rq, struct task_struct *prev, struct pin_cookie coo
 	if (prev->sched_class == &dl_sched_class)
 		update_curr_dl(rq);
 
+again:
 #ifdef CONFIG_RT_GROUP_SCHED
 	if (unlikely(!dl_rq->dl_nr_total))
 		return NULL;
@@ -1211,6 +1212,8 @@ pick_next_task_dl(struct rq *rq, struct task_struct *prev, struct pin_cookie coo
 	BUG_ON(!dl_se);
 
 	put_prev_task(rq, prev);
+	if (dl_se->dl_throttled)
+		goto again;
 
 	if (!dl_entity_is_task(dl_se)) {
 		struct rt_rq *rt_rq = rt_rq_of_dl_entity(dl_se);

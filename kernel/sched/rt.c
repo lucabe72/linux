@@ -665,6 +665,12 @@ enqueue_task_rt(struct rq *rq, struct task_struct *p, int flags)
 	struct sched_rt_entity *rt_se = &p->rt;
 	struct rt_rq *rt_rq = rt_rq_of_se(rt_se);
 
+	if (is_dl_group(rt_rq)) {
+		BUG_ON(	(rt_rq->rt_nr_running == 0) &&
+			(!RB_EMPTY_NODE(&dl_group_of(rt_rq)->rb_node))
+		);
+	}
+	
 	if (flags & ENQUEUE_WAKEUP)
 		rt_se->timeout = 0;
 
@@ -751,6 +757,12 @@ requeue_rt_entity(struct rt_rq *rt_rq, struct sched_rt_entity *rt_se, int head)
 		else
 			list_move_tail(&rt_se->run_list, queue);
 	}
+	
+	if (is_dl_group(rt_rq)) {
+		BUG_ON(	(rt_rq->rt_nr_running == 0) &&
+			(!RB_EMPTY_NODE(&dl_group_of(rt_rq)->rb_node))
+		);
+	}
 }
 
 static void requeue_task_rt(struct rq *rq, struct task_struct *p, int head)
@@ -760,6 +772,12 @@ static void requeue_task_rt(struct rq *rq, struct task_struct *p, int head)
 
 	rt_rq = rt_rq_of_se(rt_se);
 	requeue_rt_entity(rt_rq, rt_se, head);
+	
+	if (is_dl_group(rt_rq)) {
+		BUG_ON(	(rt_rq->rt_nr_running == 0) &&
+			(!RB_EMPTY_NODE(&dl_group_of(rt_rq)->rb_node))
+		);
+	}
 }
 
 static void yield_task_rt(struct rq *rq)
