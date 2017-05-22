@@ -4073,7 +4073,7 @@ static void __setscheduler(struct rq *rq, struct task_struct *p,
 
 	if (dl_prio(p->prio))
 		p->sched_class = &dl_sched_class;
-	else if (rt_prio(p->prio))
+	else if (rt_prio(p->prio) && !rt_throttled(p))
 		p->sched_class = &rt_sched_class;
 	else
 		p->sched_class = &fair_sched_class;
@@ -4361,7 +4361,7 @@ change:
 			queue_flags &= ~DEQUEUE_MOVE;
 	}
 
-	queued = task_on_rq_queued(p);
+	queued = task_on_rq_queued(p) && !rt_throttled(p);
 	running = task_current(rq, p);
 	if (queued)
 		dequeue_task(rq, p, queue_flags);
