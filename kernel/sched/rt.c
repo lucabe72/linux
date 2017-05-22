@@ -348,23 +348,18 @@ static void cfs_throttle_rt_tasks(struct rt_rq *rt_rq)
 	struct rt_prio_array *array = &rt_rq->active;
 	struct rq *rq = rq_of_rt_rq(rt_rq);
 	int idx;
-	struct sched_rt_entity *sleep_se = NULL;
+	struct list_head *pos, *n;
 
 	if (bitmap_empty(array->bitmap, MAX_RT_PRIO))
 		return;
 
 	idx = sched_find_first_bit(array->bitmap);
 	while (idx < MAX_RT_PRIO) {
-		while (!list_empty(array->queue + idx)) {
+		list_for_each_safe(pos, n, array->queue + idx) {
 			struct sched_rt_entity *rt_se;
 			struct task_struct *p;
 
-			rt_se = list_first_entry(array->queue + idx,
-						 struct sched_rt_entity,
-						 run_list);
-
-			if (sleep_se == rt_se)
-				break;
+			rt_se = list_entry(pos, struct sched_rt_entity, run_list);
 
 			p = rt_task_of(rt_se);
 			/*
@@ -372,12 +367,8 @@ static void cfs_throttle_rt_tasks(struct rt_rq *rt_rq)
 			 * to sleep. We'll handle the transition at
 			 * wakeup time eventually.
 			 */
-			if (p->state != TASK_RUNNING) {
-				/* Only one curr */
-				BUG_ON(sleep_se);
-				sleep_se = rt_se;
+			if (p->state != TASK_RUNNING)
 				continue;
-			}
 
 			list_add(&rt_se->cfs_throttled_task,
 				 &rt_rq->cfs_throttled_tasks);
