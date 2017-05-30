@@ -689,6 +689,7 @@ enqueue_task_rt(struct rq *rq, struct task_struct *p, int flags)
 
 				list_add(&rt_se->cfs_throttled_task,
 					&rt_rq->cfs_throttled_tasks);
+				rt_se->cfs_throttle_rt_rq = rt_rq;
 				p->sched_class = &fair_sched_class;
 				p->prio = DEFAULT_PRIO;
 				p->sched_class->enqueue_task(rq, p, flags);

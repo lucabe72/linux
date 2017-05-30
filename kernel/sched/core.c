@@ -3651,6 +3651,7 @@ void __setprio_other(struct rq *rq, struct task_struct *p)
 	if (running)
 		put_prev_task(rq, p);
 */
+	p->rt.cfs_throttle_rt_rq = rt_rq_of_se(&p->rt);
 	p->sched_class = &fair_sched_class;
 	p->prio = DEFAULT_PRIO;
 
@@ -3706,6 +3707,7 @@ again:
 	if (running)
 		put_prev_task(cpu_rq(cpu), p);
 
+	p->rt.cfs_throttle_rt_rq = NULL;
 	p->sched_class = &rt_sched_class;
 	p->prio = (MAX_RT_PRIO - 1) - p->rt_priority;
 

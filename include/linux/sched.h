@@ -1366,6 +1366,7 @@ struct sched_rt_entity {
 	/* rq on which this entity is (to be) queued: */
 	struct rt_rq		*rt_rq;
 	struct list_head	cfs_throttled_task;
+	struct rt_rq		*cfs_throttle_rt_rq;
 #endif
 };
 
