@@ -1365,6 +1365,7 @@ struct sched_rt_entity {
 	struct sched_dl_entity	*parent;
 	/* rq on which this entity is (to be) queued: */
 	struct rt_rq		*rt_rq;
+	struct list_head	cfs_throttled_task;
 #endif
 };
 

@@ -464,6 +464,8 @@ struct rt_rq {
 
 #ifdef CONFIG_RT_GROUP_SCHED
 	struct task_group *tg;
+
+	struct list_head cfs_throttled_tasks;
 #endif
 	struct rq *rq;
 };

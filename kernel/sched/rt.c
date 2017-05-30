@@ -43,6 +43,9 @@ void init_rt_rq(struct rt_rq *rt_rq)
 	init_irq_work(&rt_rq->push_work, push_irq_work_func);
 #endif
 #endif /* CONFIG_SMP */
+#ifdef CONFIG_RT_GROUP_SCHED
+	INIT_LIST_HEAD(&rt_rq->cfs_throttled_tasks);
+#endif
 }
 
 #ifdef CONFIG_RT_GROUP_SCHED
