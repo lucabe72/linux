@@ -721,7 +721,10 @@ static void dequeue_task_rt(struct rq *rq, struct task_struct *p, int flags)
 
 	if (!rt_throttled(p))
 		update_curr_rt(rq);
-	BUG_ON(p->sched_class != &rt_sched_class);
+	if (p->sched_class != &rt_sched_class) {
+		p->sched_class->dequeue_task(rq, p, flags);
+		return;
+	}
 	dequeue_rt_entity(rt_se, flags);
 	walt_dec_cumulative_runnable_avg(rq, p);
 

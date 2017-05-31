@@ -3763,6 +3763,9 @@ void rt_mutex_setprio(struct task_struct *p, int prio)
 		WARN_ON(p->pi_blocked_on);
 		goto out_unlock;
 	}
+	
+	if (rt_throttled(p))
+		goto out_unlock;
 
 	trace_sched_pi_setprio(p, prio);
 	oldprio = p->prio;
