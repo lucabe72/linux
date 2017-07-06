@@ -689,6 +689,8 @@ enqueue_task_rt(struct rq *rq, struct task_struct *p, int flags)
 				rt_se->cfs_throttle_rt_rq = rt_rq;
 				p->sched_class = &fair_sched_class;
 				p->prio = DEFAULT_PRIO;
+				if (task_current(rq, p))
+					p->sched_class->set_curr_task(rq);
 #ifdef CONFIG_FAIR_GROUP_SCHED
 				p->se.depth = p->se.parent ? p->se.parent->depth + 1 : 0;
 #endif
