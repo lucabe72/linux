@@ -696,7 +696,8 @@ enqueue_task_rt(struct rq *rq, struct task_struct *p, int flags)
 #endif
 
 				p->sched_class->enqueue_task(rq, p, flags);
-				p->sched_class->switched_to(rq, p);
+				if ((flags & ENQUEUE_RESTORE) == 0)
+					p->sched_class->switched_to(rq, p);
 
 				return;
 			}
